@@ -21,12 +21,40 @@ const client = new MongoClient(uri, {
       deprecationErrors: true,
     }
   });
+    
+  const dailyCostsCollection = client.db("hospital").collection("dailyCosts");
 
   const dbConnect = async ()=>{
     try{
         await client.connect()
-        console.log('DB connected');
+        console.log('Db');
+
+    // Routes 
+
+    app.post('/daily-cost' , async( req , res )=>{
+       const dailyCost = req.body;
+       const result = await dailyCostsCollection.insertOne(dailyCost)
+       res.send(result);
+    })
+    
+    app.get('/total-cost', async (req, res) => {  
+        const dailyCosts = await dailyCostsCollection
+          .find()
+          .toArray();
+         
+        
+        const totalCost = dailyCosts.reduce((total, item) => {
+          const cost = parseFloat(item.cost) || 0;
+          return total + cost;
+      }, 0)
+      
+        res.send({totalCost });
+    });
+    
+
+
     }
+   
     catch(err){
        console.log(err.name , err.massage);
     }
